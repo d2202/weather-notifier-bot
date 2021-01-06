@@ -4,10 +4,6 @@ import requests
 import config
 
 
-url = 'https://api.telegram.org/bot{0}/'.format(config.bot_token)
-print(config.weather_token, config.bot_token)
-print(url)
-
 bot = telebot.TeleBot(config.bot_token)
 
 
@@ -38,17 +34,16 @@ def get_help(message):
     bot.send_message(message.from_user.id, help_message)
 
 
-@bot.message_handler(commands=['city'])
-def set_city(message):
-    bot.send_message(message.from_user.id, 'Отправь мне название города.')
-
-
 @bot.message_handler(content_types=['text'])
 def get_city(message):
     city = message.text
-    bot.send_message(message.from_user.id, 'Ты отправил {}. Теперь я буду искать прогноз погоды для этого города.'.format(city))
-    # TODO: парсинг города в openweather, разбор json на нужные данные, формирование ответа.
-    request_weather(city)
+    user_id = message.from_user.id
+    weather_data = request_weather(city)
+    if weather_data:
+        bot.send_message(message.from_user.id, 'Ты отправил {}. Теперь я буду искать прогноз погоды для этого города.'.format(city))
+        send_weather(user_id, weather_data)
+    else:
+        bot.send_message(message.from_user.id, 'Прости, я не нашел такой город. Может, попробуем еще раз? ')
 
 
 def request_weather(city):
@@ -61,7 +56,22 @@ def request_weather(city):
     }
     r = requests.get(openweather_url, params=params)
     data_json = r.json()
+    if data_json['cod'] != 200:
+        return None
     return data_json
+
+
+def send_weather(user_chat_id, data):
+    # TODO: обработка времени, отсылка утром.
+    city_name = data['name']
+    weather_desc = data['weather'][0]['description']
+    actual_temp = int(data['main']['temp'])
+    feels_temp = int(data['main']['feels_like'])
+    answer = """Город: {0}
+{1}
+Температура: {2}
+Ощущается как: {3}""".format(city_name, weather_desc, actual_temp, feels_temp)
+    bot.send_message(user_chat_id, answer)
 
 
 if __name__ == '__main__':
