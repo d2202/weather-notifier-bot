@@ -5,7 +5,6 @@ import config
 
 
 url = 'https://api.telegram.org/bot{0}/'.format(config.bot_token)
-
 print(config.weather_token, config.bot_token)
 print(url)
 
@@ -49,6 +48,20 @@ def get_city(message):
     city = message.text
     bot.send_message(message.from_user.id, 'Ты отправил {}. Теперь я буду искать прогноз погоды для этого города.'.format(city))
     # TODO: парсинг города в openweather, разбор json на нужные данные, формирование ответа.
+    request_weather(city)
+
+
+def request_weather(city):
+    openweather_url = 'http://api.openweathermap.org/data/2.5/weather?'
+    params = {
+        'lang': 'ru',
+        'units': 'metric',
+        'q': city,
+        'appid': config.weather_token
+    }
+    r = requests.get(openweather_url, params=params)
+    data_json = r.json()
+    return data_json
 
 
 if __name__ == '__main__':
