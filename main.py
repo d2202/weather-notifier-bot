@@ -1,5 +1,6 @@
 import telebot
 from datetime import datetime
+from time import sleep
 import requests
 import config
 
@@ -15,11 +16,20 @@ def log(message, answer):
     print("\n -------- ")
 
 
+def errors_log(error_msg):
+    red_color = "\033[1;31m"
+    reset_color = "\033[0;0m"
+    print("\n -------- ")
+    print(datetime.now())
+    print(red_color + error_msg + reset_color)
+    print("\n -------- ")
+
+
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     name = message.from_user.first_name
     answer = """Привет, {}!\nЯ буду присылать тебе погоду на день каждое утро. 
-Выбери город и каждый день в 9 утра будешь получать свежий прогноз :) """.format(name)
+Выбери город и каждый день утром будешь получать свежий прогноз :) """.format(name)
     log(message, answer)
     bot.send_message(message.from_user.id, answer)
     get_help(message)
@@ -40,10 +50,14 @@ def get_city(message):
     user_id = message.from_user.id
     weather_data = request_weather(city)
     if weather_data:
-        bot.send_message(message.from_user.id, 'Ты отправил {}. Теперь я буду искать прогноз погоды для этого города.'.format(city))
-        send_weather(user_id, weather_data)
+        answer = 'Твой город - {}. Теперь я буду искать прогноз погоды для него.'.format(city)
+        bot.send_message(message.from_user.id, answer)
+        log(message, answer)
+        scheduler(user_id, weather_data)
     else:
-        bot.send_message(message.from_user.id, 'Прости, я не нашел такой город. Может, попробуем еще раз? ')
+        answer = 'Прости, я не нашел такой город. Может, попробуем еще раз? '
+        bot.send_message(message.from_user.id, answer)
+        log(message, answer)
 
 
 def request_weather(city):
@@ -60,15 +74,26 @@ def request_weather(city):
         return None
     return data_json
 
+#TODO как запускать это в бесконечном цикле, что передавать?
+def scheduler(user_chat_id, data):
+    current_time = datetime.datetime.now().time().replace(second=0, microsecond=0)
+    sending_time = datetime.time(11, 0) # +3 часа разницы в часовых поясах, формат H M
+    print('Will send message at {} MSK'.format(sending_time))
+    if (current_time == sending_time):
+        send_weather(user_chat_id, data)
+        print("\n -------- ")
+        print(datetime.now())
+        print('Message to user id {0} at time {1} MSK'.format(user_chat_id, sending_time))
+    else:
+        sleep(60)
 
 def send_weather(user_chat_id, data):
-    # TODO: обработка времени, отсылка утром.
     city_name = data['name']
     weather_desc = data['weather'][0]['description']
     actual_temp = int(data['main']['temp'])
     feels_temp = int(data['main']['feels_like'])
     answer = """Город: {0}
-{1}
+Прогноз: {1}
 Температура: {2}
 Ощущается как: {3}""".format(city_name, weather_desc, actual_temp, feels_temp)
     bot.send_message(user_chat_id, answer)
@@ -76,4 +101,9 @@ def send_weather(user_chat_id, data):
 
 if __name__ == '__main__':
     bot.polling(none_stop=True)
+    while(True):
+        try:
+            scheduler(get_city(message))
+        except Exception as e:
+            errors_log(e)
 
