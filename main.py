@@ -3,6 +3,7 @@ from datetime import datetime
 from time import sleep
 import requests
 import config
+import forecast
 
 
 bot = telebot.TeleBot(config.bot_token)
@@ -46,6 +47,7 @@ def get_help(message):
 
 @bot.message_handler(content_types=['text'])
 def get_city(message):
+    weather = forecast.ForecastSingleton()
     city = message.text
     user_id = message.from_user.id
     weather_data = request_weather(city)
@@ -53,7 +55,8 @@ def get_city(message):
         answer = 'Твой город - {}. Теперь я буду искать прогноз погоды для него.'.format(city)
         bot.send_message(message.from_user.id, answer)
         log(message, answer)
-        scheduler(user_id, weather_data)
+        weather.set_user_id(user_id)
+        send_weather(weather_data)
     else:
         answer = 'Прости, я не нашел такой город. Может, попробуем еще раз? '
         bot.send_message(message.from_user.id, answer)
@@ -74,6 +77,8 @@ def request_weather(city):
         return None
     return data_json
 
+
+"""
 #TODO как запускать это в бесконечном цикле, что передавать?
 def scheduler(user_chat_id, data):
     current_time = datetime.datetime.now().time().replace(second=0, microsecond=0)
@@ -86,24 +91,33 @@ def scheduler(user_chat_id, data):
         print('Message to user id {0} at time {1} MSK'.format(user_chat_id, sending_time))
     else:
         sleep(60)
+"""
 
-def send_weather(user_chat_id, data):
-    city_name = data['name']
+
+def send_weather(data):
+    weather = forecast.ForecastSingleton()
+    print("old descr data in singleton: ", weather.get_weather_desc())
     weather_desc = data['weather'][0]['description']
+    weather.set_weather_desc(weather_desc)
+    print("new descr data in singleton: ", weather.get_weather_desc())
+    city_name = data['name']
+    weather.set_city(city_name)
     actual_temp = int(data['main']['temp'])
+    weather.set_temp_actual(actual_temp)
     feels_temp = int(data['main']['feels_like'])
+    weather.set_temp_feels(feels_temp)
     answer = """Город: {0}
 Прогноз: {1}
 Температура: {2}
-Ощущается как: {3}""".format(city_name, weather_desc, actual_temp, feels_temp)
-    bot.send_message(user_chat_id, answer)
+Ощущается как: {3}""".format(weather.get_city(), weather.get_weather_desc(), weather.get_temp_actual(), weather.get_temp_feels())
+    bot.send_message(weather.get_user_id(), answer)
 
 
 if __name__ == '__main__':
     bot.polling(none_stop=True)
-    while(True):
-        try:
-            scheduler(get_city(message))
-        except Exception as e:
-            errors_log(e)
+    # while(True):
+    #    try:
+    #
+    #    except Exception as e:
+    #        errors_log(e)
 
