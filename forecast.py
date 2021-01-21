@@ -1,41 +1,35 @@
-class ForecastSingleton(object):
-    user_id = None
-    city = ''
-    weather_desc = ''
-    temp_actual = None
-    temp_feels = None
+import datetime
+
+class ForecastSingletone(object):
+    forecasts_data = []
+    # user_id = None
+    # city = ''
+    # weather_desc = ''
+    # temp_actual = None
+    # temp_feels = None
 
     def __new__(cls):
         if not hasattr(cls, 'instance'):
-            cls.instance = super(ForecastSingleton, cls).__new__(cls)
+            cls.instance = super(ForecastSingletone, cls).__new__(cls)
         return cls.instance
 
-    def set_user_id(self, user_id):
-        self.user_id = user_id
+    def set_data(self, data):
+        # я без понятия как это оптимизировать.
+        new_forecast = {}
+        new_forecast['user_id'] = data['user_id']
+        new_forecast['city'] = data['city']
+        new_forecast['weather_desc'] = data['weather_desc']
+        new_forecast['temp_actual'] = data['temp_actual']
+        new_forecast['temp_feels'] = data['temp_feels']
+        new_forecast['sending_time'] = datetime.time(5, 0)
+        for user_data in self.forecasts_data:
+            if user_data['user_id'] == data['user_id']:
+                user_data['city'] = data['city']
+                user_data['weather_desc'] = data['weather_desc']
+                user_data['temp_actual'] = data['temp_actual']
+                user_data['temp_feels'] = data['temp_feels']
+                return
+        self.forecasts_data.append(new_forecast)
 
-    def set_city(self, city):
-        self.city = city
-
-    def set_weather_desc(self, desc):
-        self.weather_desc = desc
-
-    def set_temp_actual(self, temp_actual):
-        self.temp_actual = temp_actual
-
-    def set_temp_feels(self, temp_feels):
-        self.temp_feels = temp_feels
-
-    def get_user_id(self):
-        return self.user_id
-
-    def get_city(self):
-        return self.city
-
-    def get_weather_desc(self):
-        return self.weather_desc
-
-    def get_temp_actual(self):
-        return self.temp_actual
-
-    def get_temp_feels(self):
-        return self.temp_feels
+    def get_users_data(self):
+        return self.forecasts_data
