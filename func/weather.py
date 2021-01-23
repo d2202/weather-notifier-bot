@@ -37,7 +37,7 @@ def request_weather_dayly(city):
 
 
 def make_now_forecast(data, user_id):
-    # print('make_now_forecast function')
+    print('make_now_forecast function')
     city_name = data['name']
     weather_desc = data['weather'][0]['description']
     actual_temp = int(data['main']['temp'])
@@ -53,7 +53,7 @@ def make_now_forecast(data, user_id):
 
 
 def make_dayly_forecast(data, user_id):
-    # print('make_dayly_forecast function.')
+    print('make_dayly_forecast function.')
     city_name = data['city']['name']
     weather_data_element = len(data['list']) - 1 # выбираем элемент, где время = 15.00
     weather_desc = data['list'][weather_data_element]['weather'][0]['description']
@@ -71,7 +71,7 @@ def make_dayly_forecast(data, user_id):
 
 
 def update_dayly_forecast():
-    users_forecasts = forecast.get_users_data()
+    users_forecasts = userForecast.get_users_data()
     for user in users_forecasts:
         forecast_for_today = request_weather_dayly(user['city'])
         make_dayly_forecast(forecast_for_today, user['user_id'])

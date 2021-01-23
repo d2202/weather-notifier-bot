@@ -2,12 +2,8 @@ import datetime
 
 class ForecastSingletone(object):
     forecasts_data = []
-    # user_id = None
-    # city = ''
-    # weather_desc = ''
-    # temp_actual = None
-    # temp_feels = None
-
+    
+    
     def __new__(cls):
         if not hasattr(cls, 'instance'):
             cls.instance = super(ForecastSingletone, cls).__new__(cls)

@@ -89,48 +89,6 @@ def get_city(message):
         log(message, answer)
 
 
-
-'''
-def make_forecast(data, user_id):
-    print('make_forecast function')
-    city_name = data['name']
-    weather_desc = data['weather'][0]['description']
-    actual_temp = int(data['main']['temp'])
-    feels_temp = int(data['main']['feels_like'])
-    user = {
-        'user_id': user_id,
-        'city': city_name,
-        'weather_desc': weather_desc,
-        'temp_actual': actual_temp,
-        'temp_feels': feels_temp
-    }
-    userForecast.set_data(user)
-    print(userForecast.get_users_data())
-    print('Created new user forecast: ', user)
-'''
-
-#     answer = """Город: {0}
-# Прогноз: {1}
-# Температура: {2}
-# Ощущается как: {3}""".format(weather.get_city(), weather.get_weather_desc(), weather.get_temp_actual(), weather.get_temp_feels())
-    # bot.send_message(weather.get_user_id(), answer)
-
-'''
-def request_weather(city):
-    openweather_url = 'http://api.openweathermap.org/data/2.5/weather?'
-    params = {
-        'lang': 'ru',
-        'units': 'metric',
-        'q': city,
-        'appid': config.weather_token
-    }
-    r = requests.get(openweather_url, params=params)
-    data_json = r.json()
-    if data_json['cod'] != 200:
-        return None
-    return data_json
-'''
-
 def send_forecast():
     current_time = datetime.datetime.now().time().replace(second=0, microsecond=0)
     print(current_time)
@@ -146,15 +104,9 @@ def send_forecast():
     for user in users_forecasts:
         if current_time == user['sending_time']:
             answer = """Сегодня днём в городе {0}
-Ожидается: {1}
+\n{1}
 Температура: {2}
 Ощущается как: {3}""".format(user['city'], user['weather_desc'], user['temp_actual'], user['temp_feels'])
-
-            '''
-            new_forecast = request_weather(user['city'])
-            make_forecast(new_forecast, user['user_id'])
-            answer = """Город: {0} \nПрогноз: {1}\nТемпература: {2}\nОщущается как: {3}""".format(user['city'], user['weather_desc'], user['temp_actual'], user['temp_feels'])
-            '''
             print('sended message to user!', user['user_id'])
             bot.send_message(user['user_id'], answer)
 
