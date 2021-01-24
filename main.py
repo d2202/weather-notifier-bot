@@ -1,8 +1,7 @@
 import telebot
 import datetime
 from time import sleep
-import requests
-import config
+import func.config as config
 import func.forecast as forecast
 import func.weather as weather
 from threading import Thread
@@ -52,8 +51,8 @@ def get_help(message):
     """
     log(message, help_message)
     bot.send_message(message.from_user.id, help_message)
-  
-  
+
+
 @bot.message_handler(commands=['now'])
 def get_now_forecast(message):
     user_id = message.from_user.id
@@ -103,7 +102,7 @@ def send_forecast():
     users_forecasts = userForecast.get_users_data()
     for user in users_forecasts:
         if current_time == user['sending_time']:
-            answer = """Сегодня днём в городе {0}
+            answer = """Сегодня днём в городе {0} ожидается:
 \n{1}
 Температура: {2}
 Ощущается как: {3}""".format(user['city'], user['weather_desc'], user['temp_actual'], user['temp_feels'])
