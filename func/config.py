@@ -1,6 +1,6 @@
-bot_token = '1470059803:AAFXWn7_WbNh50W_AmQjNSRtRqitX-7sL7g'
-weather_token = '755b75d5118c5741fb355e027ec288b4'
-mongo_user = 'tgbot'
-mongo_passwd = 'RT7pYfOgLz5m1eko'
-mongo_db = 'bot_users'
-mongo_collection = 'users'
+bot_token = <your_bot_token>
+weather_token = <openweatherapi_token>
+mongo_user = <mongodb_username>
+mongo_passwd = <mongdb_user_password>
+mongo_db = <database_name>
+mongo_collection = <collection_name>
