@@ -1,8 +1,9 @@
-import func.forecast as forecast
+# import func.forecast as forecast
+import func.mongo_users as mongo
 import requests
+import datetime
 
-userForecast = forecast.ForecastSingletone()
-
+# userForecast = forecast.ForecastSingletone()
 
 def request_weather_now(city):
     openweather_url = 'http://api.openweathermap.org/data/2.5/weather?'
@@ -20,7 +21,6 @@ def request_weather_now(city):
 
 
 def request_weather_dayly(city):
-    # TODO: добавить проверку на два слова в названии города, лепить их вместе
     openweather_url = 'http://api.openweathermap.org/data/2.5/forecast?'
     params = {
         'lang': 'ru',
@@ -64,10 +64,13 @@ def make_dayly_forecast(data, user_id):
         'city': city_name,
         'weather_desc': weather_desc,
         'temp_actual': actual_temp,
-        'temp_feels': feels_temp
+        'temp_feels': feels_temp,
+        # 'sending_time': datetime.time(5, 0)
+        'sending_time': '5:00'
     }
     print(forecast_dayly)
-    userForecast.set_data(forecast_dayly)
+    # userForecast.set_data(forecast_dayly)
+    mongo.update_user_data(forecast_dayly)
 
 
 def update_dayly_forecast():
