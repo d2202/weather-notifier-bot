@@ -2,4 +2,5 @@
 bot/
 config.py
 __pycache__/
+func/__pycache__
 urls.txt
