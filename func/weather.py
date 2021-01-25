@@ -1,9 +1,7 @@
-# import func.forecast as forecast
 import func.mongo_users as mongo
 import requests
 import datetime
 
-# userForecast = forecast.ForecastSingletone()
 
 def request_weather_now(city):
     openweather_url = 'http://api.openweathermap.org/data/2.5/weather?'
@@ -42,14 +40,11 @@ def make_now_forecast(data, user_id):
     weather_desc = data['weather'][0]['description']
     actual_temp = int(data['main']['temp'])
     feels_temp = int(data['main']['feels_like'])
-    forecast_now = {
-        'user_id': user_id,
-        'city': city_name,
-        'weather_desc': weather_desc,
-        'temp_actual': actual_temp,
-        'temp_feels': feels_temp
-    }
-    return forecast_now
+    forecast = """Прямо сейчас в городе {0}:
+\n{1}
+Температура: {2}
+Ощущается как: {3}""".format(city_name, weather_desc, actual_temp, feels_temp)
+    return forecast
 
 
 def make_dayly_forecast(data, user_id):
@@ -69,12 +64,11 @@ def make_dayly_forecast(data, user_id):
         'sending_time': '5:00'
     }
     print(forecast_dayly)
-    # userForecast.set_data(forecast_dayly)
     mongo.update_user_data(forecast_dayly)
 
 
 def update_dayly_forecast():
-    users_forecasts = userForecast.get_users_data()
+    users_forecasts = mongo.get_users()
     for user in users_forecasts:
         forecast_for_today = request_weather_dayly(user['city'])
-        make_dayly_forecast(forecast_for_today, user['user_id'])
+        make_dayly_forecast(forecast_for_today, user['_id'])

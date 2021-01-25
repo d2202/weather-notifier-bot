@@ -2,17 +2,13 @@ import telebot
 import datetime
 from time import sleep
 import func.config as config
-# import func.forecast as forecast
 import func.mongo_users as mongo
-
 import func.weather as weather
 from threading import Thread
 import schedule
 
 
 bot = telebot.TeleBot(config.bot_token)
-
-# userForecast = forecast.ForecastSingletone()
 
 
 def schedule_checker():
@@ -61,19 +57,13 @@ def get_help(message):
 @bot.message_handler(commands=['now'])
 def get_now_forecast(message):
     user_id = message.from_user.id
-    # forecasts_list = userForecast.get_users_data()
     forecasts_list = mongo.get_users()
-    answer = ''
+    forecast_now = ''
     for user in forecasts_list:
-        # if user['user_id'] == user_id:
         if user['_id'] == user_id:
             current_weather = weather.request_weather_now(user['city'])
             forecast_now = weather.make_now_forecast(current_weather, user_id)
-            answer = """Прямо сейчас в городе {0}:
-\n{1}
-Температура: {2}
-Ощущается как: {3}""".format(forecast_now['city'], forecast_now['weather_desc'], forecast_now['temp_actual'], forecast_now['temp_feels'])
-    bot.send_message(user_id, answer)
+            bot.send_message(user_id, forecast_now)
 
 
 @bot.message_handler(content_types=['text'])
@@ -109,15 +99,12 @@ def send_forecast():
     print(current_time)
     print('scheduller in progress..')
     print('users:')
-    # print(userForecast.get_users_data())
     print(mongo.get_users())
     update_time = datetime.time(3, 0) # время, когда будут происходить обновления прогнозов для всех юзеров, 6 утра
     if current_time == update_time:
         weather.update_dayly_forecast()
         print('updated dayly forecasts!')
-        # print(userForecast.get_users_data())
         print(mongo.get_users())
-    # users_forecasts = userForecast.get_users_data()
     users_forecasts = mongo.get_users()
     for user in users_forecasts:
         '''
