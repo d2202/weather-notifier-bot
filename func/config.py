@@ -1,6 +1,6 @@
-bot_token = <your_bot_token>
-weather_token = <openweatherapi_token>
-mongo_user = <mongodb_username>
-mongo_passwd = <mongdb_user_password>
-mongo_db = <database_name>
+bot_token = <tg_bot_token>
+weather_token = <openweather_api_token>
+mongo_user = <db_username>
+mongo_passwd = <db_password>
+mongo_db = <db_name>
 mongo_collection = <collection_name>
