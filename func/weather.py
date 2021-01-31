@@ -34,7 +34,7 @@ def request_weather_dayly(city):
     return data_json
 
 
-def make_now_forecast(data, user_id):
+def make_now_forecast(data):
     print('make_now_forecast function')
     city_name = data['name']
     weather_desc = data['weather'][0]['description']
