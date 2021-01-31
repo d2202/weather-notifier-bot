@@ -64,7 +64,7 @@ def get_now_forecast(message):
     for user in forecasts_list:
         if user['_id'] == user_id:
             current_weather = weather.request_weather_now(user['city'])
-            forecast_now = weather.make_now_forecast(current_weather, user_id)
+            forecast_now = weather.make_now_forecast(current_weather)
             bot.send_message(user_id, forecast_now)
             log(message, forecast_now)
 
@@ -99,13 +99,16 @@ def parse_city(message):
     weather_data = weather.request_weather_dayly(city)
     user_markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     if weather_data:
-        answer = 'Твой город - {}. Запомнить?.'.format(city)
+        weather_now = weather.request_weather_now(city)
+        forecast_now = weather.make_now_forecast(weather_now)
+        bot.send_message(user_id, forecast_now)
+        answer = 'Запомнить город?'.format(city)
         log(message, answer)
         user_markup.row('Запомнить: {}'.format(city))
         user_markup.row('Не запоминать')
         msg = bot.send_message(user_id, answer, reply_markup=user_markup)
         bot.register_next_step_handler(msg, update_city)
-        weather.make_dayly_forecast(weather_data, user_id)
+        # weather.make_dayly_forecast(weather_data, user_id)
 
     else:
         answer = 'Прости, я не нашел такой город. Может, попробуем еще раз? '
@@ -126,12 +129,14 @@ def update_city(message):
         markup_message = message.text.split(': ')
         new_city = markup_message[1]
         if mongo.update_city(message.from_user.id, new_city):
-            bot.send_message(message.from_user.id, 'Город обновлён.')
+            bot.send_message(message.from_user.id, 'Теперь я буду искать прогноз погоды для города {}.'.format(new_city))
+            weather_data = weather.request_weather_dayly(new_city)
+            weather.make_dayly_forecast(weather_data, message.from_user.id)
             msg = bot.send_message(message.from_user.id, 'Выбери время получения прогноза.', reply_markup = user_markup)
             bot.register_next_step_handler(msg, set_time)
         else:
             bot.send_message(message.from_user.id, 'Тебя нет в базе, старина')
-    else:
+    elif message.text != 'Не запоминать':
         bot.send_message(message.from_user.id, 'Введи город и выбери один из вариантов.', reply_markup = hide_markup)
 
 
