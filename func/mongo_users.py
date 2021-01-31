@@ -29,18 +29,20 @@ def update_user_data(data):
         'weather_desc': data['weather_desc'],
         'temp_actual': data['temp_actual'],
         'temp_feels': data['temp_feels'],
-        'sending_time': data['sending_time']
+        # 'sending_time': data['sending_time']
     }
     try:
         collection.insert_one(user_data)
-        # collection.update_one({'_id': data['user_id']}, {'$set': user_data})
     except pymongo.errors.DuplicateKeyError:
         print('user {} exists, updating data...'.format(data['user_id']))
         collection.update_one({'_id': data['user_id']}, {'$set': user_data})
 
 
 def delete_user(user_id):
-    collection.delete_one({'_id': user_id})
+    if collection.find_one({'_id': user_id}):
+        collection.delete_one({'_id': user_id})
+        return True
+    return False
 
 
 def get_users():
@@ -50,10 +52,16 @@ def get_users():
         users_list.append(user)
     return users_list
 
-# TODO
-def update_user_sending_time(user_id, new_time):
+
+def update_city(user_id, city):
+    if collection.find_one({'_id': user_id}):
+        collection.update_one({'_id': user_id}, {'$set': {'city': city}})
+        return True
+    return False
+
+
+def update_sending_time(user_id, new_time):
     if collection.find_one({'_id': user_id}):
         collection.update_one({'_id': user_id}, {'$set': {'sending_time': new_time}})
         return True
     return False
-    

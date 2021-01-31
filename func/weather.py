@@ -60,8 +60,7 @@ def make_dayly_forecast(data, user_id):
         'weather_desc': weather_desc,
         'temp_actual': actual_temp,
         'temp_feels': feels_temp,
-        # 'sending_time': datetime.time(5, 0)
-        'sending_time': '5:00'
+        # 'sending_time': '5:00'
     }
     print(forecast_dayly)
     mongo.update_user_data(forecast_dayly)
