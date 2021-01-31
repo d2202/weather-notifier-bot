@@ -135,8 +135,10 @@ def update_city(message):
             msg = bot.send_message(message.from_user.id, 'Выбери время получения прогноза.', reply_markup = user_markup)
             bot.register_next_step_handler(msg, set_time)
         else:
-            bot.send_message(message.from_user.id, 'Тебя нет в базе, старина')
-    elif message.text != 'Не запоминать':
+            bot.send_message(message.from_user.id, 'Тебя нет в базе, старина', reply_markup = hide_markup)
+    elif message.text == 'Не запоминать':
+        bot.send_message(message.from_user.id, 'Я не буду запоминать этот город для тебя.', reply_markup = hide_markup)
+    else:
         bot.send_message(message.from_user.id, 'Введи город и выбери один из вариантов.', reply_markup = hide_markup)
 
 
