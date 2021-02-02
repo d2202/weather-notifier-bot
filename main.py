@@ -48,39 +48,60 @@ def handle_start(message):
 
 @bot.message_handler(commands=['help'])
 def get_help(message):
-    help_message = """Прежде всего нужно выбрать город, для которого будет находиться прогноз.
-Для этого отправь мне название своего города.
+    button_emoji = u'U+1F601'
+    help_message = f"""Прежде всего нужно выбрать город, для которого будет\
+ находиться прогноз.
+
+  Для этого отправь мне название своего города, после этого я пришлю тебе\
+ прогноз на текущий час.
+  Если захочешь, могу запомнить город и присылать в выбранное время прогноз на день.
+
+   Для этого нажми кнопку " Запомнить *твой город* " после введения города,\
+ а затем выбери время, в которое тебе удобно будет получать прогноз.
+
+ Список комманд, которые долны тебе помочь (учти, я должен знать город!):
+ /time - позволяет изменить время получения утреннего прогноза
+ /now - выведет пронгоз на текущий час
+ /help - выведет еще раз эту подсказку
+ /stop - отписаться от рассылки прогноза (для повторной рассылки нужно будет\
+ заново указать свой город.)
     """
     log(message, help_message)
     bot.send_message(message.from_user.id, help_message)
 
 
-# TODO: добавить исп. is_user, логи
 @bot.message_handler(commands=['now'])
 def get_now_forecast(message):
     print('get_now_forecast function')
     user_id = message.from_user.id
-    forecasts_list = mongo.get_users()
-    for user in forecasts_list:
-        if user['_id'] == user_id:
-            current_weather = weather.request_weather_now(user['city'])
-            forecast_now = weather.make_now_forecast(current_weather)
-            bot.send_message(user_id, forecast_now)
-            log(message, forecast_now)
+    if mongo.is_user(user_id):
+        forecasts_list = mongo.get_users()
+        for user in forecasts_list:
+            if user['_id'] == user_id:
+                current_weather = weather.request_weather_now(user['city'])
+                forecast_now = weather.make_now_forecast(current_weather)
+                bot.send_message(user_id, forecast_now)
+                log(message, forecast_now)
+    else:
+        bot.send_message(user_id, 'Для начала мне нужно узнать твой город...')
 
 
 @bot.message_handler(commands=['time'])
 def command_set_time(message):
     # TODO: добавить исп. is_user, логи
-    print('command_send_time function')
-    user_markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
-    user_markup.row('7:00')
-    user_markup.row('7:30')
-    user_markup.row('8:00')
-    user_markup.row('8:30')
-    user_markup.row('9:00')
-    msg = bot.send_message(message.from_user.id, 'Выбери время получения прогноза.', reply_markup = user_markup)
-    bot.register_next_step_handler(msg, set_time)
+    if mongo.is_user(message.from_user.id):
+        print('command_send_time function')
+        user_markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+        user_markup.row('7:00')
+        user_markup.row('7:30')
+        user_markup.row('8:00')
+        user_markup.row('8:30')
+        user_markup.row('9:00')
+        msg = bot.send_message(message.from_user.id, 'Выбери время получения прогноза.', reply_markup = user_markup)
+        bot.register_next_step_handler(msg, set_time)
+    else:
+        hide_markup = telebot.types.ReplyKeyboardRemove()
+        bot.send_message(message.from_user.id, 'Для начала мне надо узнать твой город...', reply_markup = hide_markup)
 
 
 @bot.message_handler(commands=['stop'])
