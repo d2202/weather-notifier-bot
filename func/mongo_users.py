@@ -11,7 +11,11 @@ collection = db[config.mongo_collection]
 def add_user(user_id):
     print('add user function from mongo')
     user = {
-        '_id': user_id
+        '_id': user_id,
+        'weather_desc': None,
+        'temp_actual': None,
+        'temp_feels': None,
+        'sending_time': "5:00"  # default value
     }
     try:
         collection.insert_one(user)
@@ -29,7 +33,6 @@ def update_user_data(data):
         'weather_desc': data['weather_desc'],
         'temp_actual': data['temp_actual'],
         'temp_feels': data['temp_feels'],
-        # 'sending_time': data['sending_time']
     }
     try:
         collection.insert_one(user_data)
@@ -39,6 +42,7 @@ def update_user_data(data):
 
 
 def delete_user(user_id):
+    # TODO: переписать с исп. is_user
     if collection.find_one({'_id': user_id}):
         collection.delete_one({'_id': user_id})
         return True
@@ -54,6 +58,7 @@ def get_users():
 
 
 def update_city(user_id, city):
+    # TODO: переписать с исп. is_user
     if collection.find_one({'_id': user_id}):
         collection.update_one({'_id': user_id}, {'$set': {'city': city}})
         return True
@@ -61,7 +66,14 @@ def update_city(user_id, city):
 
 
 def update_sending_time(user_id, new_time):
+    # TODO: переписать с исп. is_user
     if collection.find_one({'_id': user_id}):
         collection.update_one({'_id': user_id}, {'$set': {'sending_time': new_time}})
+        return True
+    return False
+
+
+def is_user(user_id):
+    if collection.find_one({'_id': user_id}):
         return True
     return False
