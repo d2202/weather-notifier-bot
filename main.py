@@ -7,10 +7,12 @@ import func.weather as weather
 from threading import Thread
 import schedule
 import re
+import logging
 
 
 bot = telebot.TeleBot(config.bot_token)
-
+logging.basicConfig(format = u'%(filename)s[LINE:%(lineno)d]#\
+%(levelname)-8s[%(asctime)s] [FUNC: %(funcName)s] %(message)s', level = logging.INFO)
 
 def schedule_checker():
     while True:
@@ -18,37 +20,21 @@ def schedule_checker():
         sleep(1)
 
 
-def log(message, answer):
-    print("\n -------- ")
-    print(datetime.datetime.now())
-    print("Сообщение от {0} {1}. (id = {2}) \nТекст - {3}".format(message.from_user.first_name, message.from_user.last_name, str(message.from_user.id), message.text))
-    print("Ответ - ", answer)
-    print("\n -------- ")
-
-
-def errors_log(error_msg):
-    red_color = "\033[1;31m"
-    reset_color = "\033[0;0m"
-    print("\n -------- ")
-    print(datetime.datetime.now())
-    print(red_color + error_msg + reset_color)
-    print("\n -------- ")
-
-
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     name = message.from_user.first_name
     user_id = message.from_user.id
-    answer = """Привет, {}!\nЯ буду присылать тебе погоду на день каждое утро.
-Выбери город и утром будешь получать свежий прогноз :) """.format(name)
-    log(message, answer)
+    answer = f"""Привет, {name}!\nЯ буду присылать тебе погоду на день каждое утро.
+Выбери город и утром будешь получать свежий прогноз :) """
+    logging.info(f'Started new session with user {user_id}')
     bot.send_message(user_id, answer)
     get_help(message)
 
 
 @bot.message_handler(commands=['help'])
 def get_help(message):
-    button_emoji = u'U+1F601'
+    logging.info(f'Sended help message to user {message.from_user.id}')
+    # button_emoji = u'U+1F601'
     help_message = f"""Прежде всего нужно выбрать город, для которого будет\
  находиться прогноз.
 
@@ -66,13 +52,11 @@ def get_help(message):
  /stop - отписаться от рассылки прогноза (для повторной рассылки нужно будет\
  заново указать свой город.)
     """
-    log(message, help_message)
     bot.send_message(message.from_user.id, help_message)
 
 
 @bot.message_handler(commands=['now'])
 def get_now_forecast(message):
-    print('get_now_forecast function')
     user_id = message.from_user.id
     if mongo.is_user(user_id):
         forecasts_list = mongo.get_users()
@@ -81,16 +65,18 @@ def get_now_forecast(message):
                 current_weather = weather.request_weather_now(user['city'])
                 forecast_now = weather.make_now_forecast(current_weather)
                 bot.send_message(user_id, forecast_now)
-                log(message, forecast_now)
+                logging.info(f'User {user_id} requested now forecast')
+                logging.info(f'Answer: \n{forecast_now}')
     else:
         bot.send_message(user_id, 'Для начала мне нужно узнать твой город...')
+        logging.error('{user_id} is trying to request now forecast,\
+                        but user\'s city  not in db')
 
 
 @bot.message_handler(commands=['time'])
 def command_set_time(message):
-    # TODO: добавить исп. is_user, логи
     if mongo.is_user(message.from_user.id):
-        print('command_send_time function')
+        logging.info(f'user {message.from_user.id} call TIME function handler')
         user_markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
         user_markup.row('7:00')
         user_markup.row('7:30')
@@ -102,46 +88,45 @@ def command_set_time(message):
     else:
         hide_markup = telebot.types.ReplyKeyboardRemove()
         bot.send_message(message.from_user.id, 'Для начала мне надо узнать твой город...', reply_markup = hide_markup)
+        logging.error(f'user {message.from_user.id} call TIME but there is no user info in Mongo!')
 
 
 @bot.message_handler(commands=['stop'])
 def stop_working(message):
-    # TODO: добавить исп. is_user, логи
-    print('stopping forecast for user {}'.format(message.from_user.id))
     if mongo.delete_user(message.from_user.id):
-        bot.send_message(message.from_user.id, 'Спасибо за использование! Твои данные удалены из рассылки. \nНадеюсь, ты вернешься:)')
+        logging.info(f'user {message.from_user.id} data deleted from Mongo')
+        bot.send_message(message.from_user.id, 'Спасибо за использование! Твои данные удалены из рассылки.\
+        \nНадеюсь, ты вернешься:)')
     else:
+        logging.info(f'user {message.from_user.id} has no data in Mongo, just say "bye"')
         bot.send_message(message.from_user.id, 'Спасибо за использование!')
 
 
 @bot.message_handler(content_types=['text'])
 def parse_city(message):
-    # TODO: добавить исп. is_user, логи
-    print('parse_city function')
+    logging.info(f'user {message.from_user.id} trying to get forecast.\
+                    \nmessage: {message.text}')
     city = message.text
     user_id = message.from_user.id
     weather_data = weather.request_weather_dayly(city)
     user_markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     if weather_data:
+        logging.info(f'{message.text} is a valid city. Making forecast.')
         weather_now = weather.request_weather_now(city)
         forecast_now = weather.make_now_forecast(weather_now)
         bot.send_message(user_id, forecast_now)
-        answer = 'Запомнить город?'.format(city)
-        log(message, answer)
-        user_markup.row('Запомнить: {}'.format(city))
+        answer = f'Запомнить город {city}?'
+        user_markup.row(f'Запомнить: {city}')
         user_markup.row('Не запоминать')
         msg = bot.send_message(user_id, answer, reply_markup=user_markup)
         bot.register_next_step_handler(msg, update_city)
-        # weather.make_dayly_forecast(weather_data, user_id)
-
     else:
         answer = 'Прости, я не нашел такой город. Может, попробуем еще раз? '
         bot.send_message(user_id, answer)
-        log(message, answer)
 
 
 def update_city(message):
-    print('update_city!')
+    logging.info(f'User {message.from_user.id} called update city func')
     hide_markup = telebot.types.ReplyKeyboardRemove()
     user_markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     user_markup.row('7:00')
@@ -151,11 +136,14 @@ def update_city(message):
     user_markup.row('9:00')
     if re.match(r'Запомнить:\s(\w+)', message.text):
         if not mongo.is_user(message.from_user.id):
+            logging.warning(f'{message.from_user.id} is not in Mongo, adding..')
             mongo.add_user(message.from_user.id)
         markup_message = message.text.split(': ')
         new_city = markup_message[1]
+        logging.info(f'Remembering new city - {new_city}')
         if mongo.update_city(message.from_user.id, new_city):
-            bot.send_message(message.from_user.id, 'Теперь я буду искать прогноз погоды для города {}.'.format(new_city))
+            logging.info(f'City updated for user {message.from_user.id}.')
+            bot.send_message(message.from_user.id, f'Теперь я буду искать прогноз погоды для города {new_city}.')
             weather_data = weather.request_weather_dayly(new_city)
             weather.make_dayly_forecast(weather_data, message.from_user.id)
             msg = bot.send_message(message.from_user.id, 'Выбери время получения прогноза.', reply_markup = user_markup)
@@ -163,42 +151,43 @@ def update_city(message):
         # else:
         #     bot.send_message(message.from_user.id, 'Тебя нет в базе, старина', reply_markup = hide_markup)
     elif message.text == 'Не запоминать':
+        logging.info(f'NOT remembering new city')
         bot.send_message(message.from_user.id, 'Я не буду запоминать этот город для тебя.', reply_markup = hide_markup)
     else:
+        logging.error(f'{message.from_user.id} Incorrect input: \n{message.text}')
         bot.send_message(message.from_user.id, 'Введи город и выбери один из вариантов.', reply_markup = hide_markup)
 
 
 def set_time(message):
-    print('set_time function')
     hide_markup = telebot.types.ReplyKeyboardRemove()
     if re.match(r'[7,8,9,10]:[0,3]0', message.text):
         hours, minutes = message.text.split(':')
-        new_time_string = '{0}:{1}'.format(int(hours) - 3, int(minutes))
+        logging.info(f'New time for user {message.from_user.id}: {hours}:{minutes}')
+        new_time_string = f'{int(hours) - 3}:{minutes}'
         answer = 'Прогноз будет приходить в указанное время каждый день.'
         bot.send_message(message.from_user.id, answer, reply_markup=hide_markup)
         if mongo.update_sending_time(message.from_user.id, new_time_string):
-            print('user found, time updated')
-            print('new time: ' + new_time_string)
+            logging.info(f'user {message.from_user.id} found, time updated. \
+                        new time: {new_time_string}')
         else:
-            print('user {} not found'.format(user_id))
+            logging.error(f'user {message.from_user.id} not found in Mongo!')
     else:
+        logging.error(f'{message.from_user.id} Incorrect input: \n{message.text}')
         msg = 'Попробуй еще раз и выбери один из вариантов.'
         bot.send_message(message.from_user.id, msg)
 
 
 def send_forecast():
     current_time = datetime.datetime.now().time().replace(second=0, microsecond=0)
-    print(current_time)
-    print('scheduller in progress..')
-    print('users:')
-    print(mongo.get_users())
+    logging.info('Scheduler in progress..')
+    logging.info(f'Users list: \n{mongo.get_users()}')
     update_time = datetime.time(3, 0)  # время, когда будут происходить обновления прогнозов для всех юзеров, 6 утра
     if current_time == update_time:
         weather.update_dayly_forecast()
-        print('updated dayly forecasts!')
-        print(mongo.get_users())
+        logging.info('The time has come! UPDATE DAYLY FORECASTS! PRAISE THE SUN!')
     users_forecasts = mongo.get_users()
     for user in users_forecasts:
+        user_id = user['_id']
         '''
         оказывается, mongodb не умеет хранить время в формате datetime,
         поэтому приходится изобретать костыли.
@@ -210,8 +199,8 @@ def send_forecast():
 \n{1}
 Температура: {2}
 Ощущается как: {3}""".format(user['city'], user['weather_desc'], user['temp_actual'], user['temp_feels'])
-            print('sended message to user!', user['_id'])
-            bot.send_message(user['_id'], answer)
+            bot.send_message(user_id, answer)
+            logging.info(f'Sended message with dayly forecast to user {user_id}')
 
 
 if __name__ == '__main__':
