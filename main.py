@@ -14,6 +14,7 @@ bot = telebot.TeleBot(config.bot_token)
 logging.basicConfig(format = u'%(filename)s[LINE:%(lineno)d]#\
 %(levelname)-8s[%(asctime)s] [FUNC: %(funcName)s] %(message)s', level = logging.INFO)
 
+
 def schedule_checker():
     while True:
         schedule.run_pending()
@@ -34,24 +35,18 @@ def handle_start(message):
 @bot.message_handler(commands=['help'])
 def get_help(message):
     logging.info(f'Sended help message to user {message.from_user.id}')
-    emoji_time = '\U0001F556'
-    emoji_sun_cloud = '\U000026C5'
-    emoji_help = '\U0001F198'
-    emoji_stop = '\U0001F6AB'
-    emoji_radio_button = '\U0001F518'
-    emoji_check = '\U00002714'
     help_message = f"""Прежде всего нужно выбрать город, для которого будет\
  находиться прогноз. Для этого отправь мне название своего города, после этого я пришлю тебе\
  прогноз на текущий час.
- {emoji_radio_button} Если захочешь, могу запомнить город и присылать в выбранное время прогноз на день.
- {emoji_radio_button} Для этого нажми кнопку {emoji_check} "Запомнить *твой город*" после введения города,\
+ {config.RADIO_BUTTON} Если захочешь, могу запомнить город и присылать в выбранное время прогноз на день.
+ {config.RADIO_BUTTON} Для этого нажми кнопку {config.CHECK} "Запомнить *твой город*" после введения города,\
  а затем выбери время, в которое тебе удобно будет получать прогноз.
 
  Список комманд, которые должны тебе помочь (учти, я должен знать город!):\n
- {emoji_time} /time - позволяет изменить время получения утреннего прогноза
- {emoji_sun_cloud} /now - выведет пронгоз на текущий час
- {emoji_help} /help - выведет еще раз эту подсказку
- {emoji_stop} /stop - отписаться от рассылки прогноза (для повторной рассылки нужно будет\
+ {config.TIME} /time - позволяет изменить время получения утреннего прогноза
+ {config.SUN_CLOUD} /now - выведет пронгоз на текущий час
+ {config.HELP} /help - выведет еще раз эту подсказку
+ {config.STOP} /stop - отписаться от рассылки прогноза (для повторной рассылки нужно будет\
  заново указать свой город.)
     """
     bot.send_message(message.from_user.id, help_message)
@@ -181,7 +176,6 @@ def send_forecast():
     current_time = datetime.datetime.now().time().replace(second=0, microsecond=0)
     logging.info('Scheduler in progress..')
     logging.info(f'Users list: \n{mongo.get_users()}')
-    emoji_blue_mark = '\U0001F539'
     update_time = datetime.time(3, 0)  # время, когда будут происходить обновления прогнозов для всех юзеров, 6 утра
     if current_time == update_time:
         weather.update_dayly_forecast()
@@ -203,9 +197,9 @@ def send_forecast():
         if current_time == sending_time:
             answer = f"""Сегодня днём в городе {user_city} ожидается:
 \n{user_weather_desc}
-{emoji_blue_mark}Ветер: {user_wind} м/с
-{emoji_blue_mark}Температура: {user_temp_actual}
-{emoji_blue_mark}Ощущается как: {user_temp_feels}\n\n
+{config.BLUE_MARK}Ветер: {user_wind} м/с
+{config.BLUE_MARK}Температура: {user_temp_actual}
+{config.BLUE_MARK}Ощущается как: {user_temp_feels}\n\n
 {weather.make_reaction(int(user_temp_actual))}"""
             bot.send_message(user_id, answer)
             logging.info(f'Sended message with dayly forecast to user {user_id}')

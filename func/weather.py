@@ -1,4 +1,5 @@
 import func.mongo_users as mongo
+import func.config as config
 import requests
 import datetime
 import logging
@@ -6,6 +7,7 @@ import logging
 
 logging.basicConfig(format = u'%(filename)s[LINE:%(lineno)d]#\
 %(levelname)-8s[%(asctime)s] [FUNC: %(funcName)s] %(message)s', level = logging.INFO)
+
 
 def request_weather_now(city):
     openweather_url = 'http://api.openweathermap.org/data/2.5/weather?'
@@ -49,12 +51,11 @@ def make_now_forecast(data):
     actual_temp = int(data['main']['temp'])
     feels_temp = int(data['main']['feels_like'])
     wind = round(data['wind']['speed'])
-    emoji_blue_mark = '\U0001F539'
     forecast = f"""Прямо сейчас в городе {city_name}:
 \n{weather_desc}
-{emoji_blue_mark}Ветер: {wind} м/с
-{emoji_blue_mark}Температура: {actual_temp}
-{emoji_blue_mark}Ощущается как: {feels_temp}"""
+{config.BLUE_MARK}Ветер: {wind} м/с
+{config.BLUE_MARK}Температура: {actual_temp}
+{config.BLUE_MARK}Ощущается как: {feels_temp}"""
     return forecast
 
 
