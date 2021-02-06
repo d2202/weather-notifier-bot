@@ -48,10 +48,13 @@ def make_now_forecast(data):
     weather_desc = data['weather'][0]['description']
     actual_temp = int(data['main']['temp'])
     feels_temp = int(data['main']['feels_like'])
+    wind = round(data['wind']['speed'])
+    emoji_blue_mark = '\U0001F539'
     forecast = f"""Прямо сейчас в городе {city_name}:
 \n{weather_desc}
-Температура: {actual_temp}
-Ощущается как: {feels_temp}"""
+{emoji_blue_mark}Ветер: {wind} м/с
+{emoji_blue_mark}Температура: {actual_temp}
+{emoji_blue_mark}Ощущается как: {feels_temp}"""
     return forecast
 
 
@@ -61,13 +64,14 @@ def make_dayly_forecast(data, user_id):
     weather_desc = data['list'][weather_data_element]['weather'][0]['description']
     actual_temp = int(data['list'][weather_data_element]['main']['temp'])
     feels_temp = int(data['list'][weather_data_element]['main']['feels_like'])
+    wind = round(data['list'][weather_data_element]['wind']['speed'])
     forecast_dayly = {
         'user_id': user_id,
         'city': city_name,
         'weather_desc': weather_desc,
+        'wind': wind,
         'temp_actual': actual_temp,
-        'temp_feels': feels_temp,
-        # 'sending_time': '5:00'
+        'temp_feels': feels_temp
     }
     logging.info(f'Just made another dayly forecast: \n{forecast_dayly}')
     mongo.update_user_data(forecast_dayly)
@@ -80,3 +84,18 @@ def update_dayly_forecast():
         forecast_for_today = request_weather_dayly(user['city'])
         make_dayly_forecast(forecast_for_today, user_id)
         logging.info(f'Updated dayly forecast for user {user_id}!')
+
+
+def make_reaction(temp):
+    if (26 <= temp):
+        return 'Ого, вот это жара! Старайся не проводить много времени на солнце и пей больше воды!'
+    if (15 <= temp <= 25):
+        return 'Наслаждайся замечательной теплой погодой! :)'
+    elif (5 <= temp <= 14):
+        return 'Не простудись! Не забывай надевать легкую куртку:)'
+    elif (-5 <= temp <= 4):
+        return 'Береги горло. В такую прохладу это особенно важно.'
+    elif (-15 <= temp <= -6):
+        return 'Надеюсь, у тебя есть шарф. Он определенно понадобится!'
+    elif (-30 <= temp <= -16):
+        return 'Не забывай о теплых носках, когда выходишь на улицу! \nИли, может, лучше вообще остаться дома?:)'

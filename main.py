@@ -34,22 +34,24 @@ def handle_start(message):
 @bot.message_handler(commands=['help'])
 def get_help(message):
     logging.info(f'Sended help message to user {message.from_user.id}')
-    # button_emoji = u'U+1F601'
+    emoji_time = '\U0001F556'
+    emoji_sun_cloud = '\U000026C5'
+    emoji_help = '\U0001F198'
+    emoji_stop = '\U0001F6AB'
+    emoji_radio_button = '\U0001F518'
+    emoji_check = '\U00002714'
     help_message = f"""Прежде всего нужно выбрать город, для которого будет\
- находиться прогноз.
-
-  Для этого отправь мне название своего города, после этого я пришлю тебе\
+ находиться прогноз. Для этого отправь мне название своего города, после этого я пришлю тебе\
  прогноз на текущий час.
-  Если захочешь, могу запомнить город и присылать в выбранное время прогноз на день.
-
-   Для этого нажми кнопку " Запомнить *твой город* " после введения города,\
+ {emoji_radio_button} Если захочешь, могу запомнить город и присылать в выбранное время прогноз на день.
+ {emoji_radio_button} Для этого нажми кнопку {emoji_check} "Запомнить *твой город*" после введения города,\
  а затем выбери время, в которое тебе удобно будет получать прогноз.
 
- Список комманд, которые долны тебе помочь (учти, я должен знать город!):
- /time - позволяет изменить время получения утреннего прогноза
- /now - выведет пронгоз на текущий час
- /help - выведет еще раз эту подсказку
- /stop - отписаться от рассылки прогноза (для повторной рассылки нужно будет\
+ Список комманд, которые должны тебе помочь (учти, я должен знать город!):\n
+ {emoji_time} /time - позволяет изменить время получения утреннего прогноза
+ {emoji_sun_cloud} /now - выведет пронгоз на текущий час
+ {emoji_help} /help - выведет еще раз эту подсказку
+ {emoji_stop} /stop - отписаться от рассылки прогноза (для повторной рассылки нужно будет\
  заново указать свой город.)
     """
     bot.send_message(message.from_user.id, help_message)
@@ -69,7 +71,7 @@ def get_now_forecast(message):
                 logging.info(f'Answer: \n{forecast_now}')
     else:
         bot.send_message(user_id, 'Для начала мне нужно узнать твой город...')
-        logging.error('{user_id} is trying to request now forecast,\
+        logging.error(f'{user_id} is trying to request now forecast,\
                         but user\'s city  not in db')
 
 
@@ -148,8 +150,6 @@ def update_city(message):
             weather.make_dayly_forecast(weather_data, message.from_user.id)
             msg = bot.send_message(message.from_user.id, 'Выбери время получения прогноза.', reply_markup = user_markup)
             bot.register_next_step_handler(msg, set_time)
-        # else:
-        #     bot.send_message(message.from_user.id, 'Тебя нет в базе, старина', reply_markup = hide_markup)
     elif message.text == 'Не запоминать':
         logging.info(f'NOT remembering new city')
         bot.send_message(message.from_user.id, 'Я не буду запоминать этот город для тебя.', reply_markup = hide_markup)
@@ -181,13 +181,19 @@ def send_forecast():
     current_time = datetime.datetime.now().time().replace(second=0, microsecond=0)
     logging.info('Scheduler in progress..')
     logging.info(f'Users list: \n{mongo.get_users()}')
+    emoji_blue_mark = '\U0001F539'
     update_time = datetime.time(3, 0)  # время, когда будут происходить обновления прогнозов для всех юзеров, 6 утра
     if current_time == update_time:
         weather.update_dayly_forecast()
-        logging.info('The time has come! UPDATE DAYLY FORECASTS! PRAISE THE SUN!')
+        logging.info('The time has come! UPDATE DAYLY FORECASTS!')
     users_forecasts = mongo.get_users()
     for user in users_forecasts:
         user_id = user['_id']
+        user_city = user['city']
+        user_weather_desc = user['weather_desc']
+        user_wind = user['wind']
+        user_temp_actual = user['temp_actual']
+        user_temp_feels = user['temp_feels']
         '''
         оказывается, mongodb не умеет хранить время в формате datetime,
         поэтому приходится изобретать костыли.
@@ -195,10 +201,12 @@ def send_forecast():
         hours, minutes = user['sending_time'].split(':')
         sending_time = datetime.time(int(hours), int(minutes))
         if current_time == sending_time:
-            answer = """Сегодня днём в городе {0} ожидается:
-\n{1}
-Температура: {2}
-Ощущается как: {3}""".format(user['city'], user['weather_desc'], user['temp_actual'], user['temp_feels'])
+            answer = f"""Сегодня днём в городе {user_city} ожидается:
+\n{user_weather_desc}
+{emoji_blue_mark}Ветер: {user_wind} м/с
+{emoji_blue_mark}Температура: {user_temp_actual}
+{emoji_blue_mark}Ощущается как: {user_temp_feels}\n\n
+{weather.make_reaction(int(user_temp_actual))}"""
             bot.send_message(user_id, answer)
             logging.info(f'Sended message with dayly forecast to user {user_id}')
 
