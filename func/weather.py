@@ -3,6 +3,7 @@ import func.config as config
 import requests
 import datetime
 import logging
+import func.emoji as emoji
 
 
 logging.basicConfig(format = u'%(filename)s[LINE:%(lineno)d]#\
@@ -51,11 +52,13 @@ def make_now_forecast(data):
     actual_temp = int(data['main']['temp'])
     feels_temp = int(data['main']['feels_like'])
     wind = round(data['wind']['speed'])
+    weather_icon = data['weather'][0]['icon']
+    icon_emoji = emoji.return_emoji(weather_icon)
     forecast = f"""Прямо сейчас в городе {city_name}:
-\n{weather_desc}
-{config.BLUE_MARK}Ветер: {wind} м/с
-{config.BLUE_MARK}Температура: {actual_temp}
-{config.BLUE_MARK}Ощущается как: {feels_temp}"""
+\n{icon_emoji} {weather_desc}
+{emoji.WIND} Ветер: {wind} м/с
+{emoji.THERMOMETER} Температура: {actual_temp}
+{emoji.THERMOMETER} Ощущается как: {feels_temp}"""
     return forecast
 
 
@@ -88,15 +91,15 @@ def update_dayly_forecast():
 
 
 def make_reaction(temp):
-    if (26 <= temp):
+    if (30 <= temp):
         return 'Ого, вот это жара! Старайся не проводить много времени на солнце и пей больше воды!'
-    if (15 <= temp <= 25):
-        return 'Наслаждайся замечательной теплой погодой! :)'
+    if (15 <= temp <= 29):
+        return 'Наслаждайся замечательной комфортной температурой! :)'
     elif (5 <= temp <= 14):
         return 'Не простудись! Не забывай надевать легкую куртку:)'
     elif (-5 <= temp <= 4):
         return 'Береги горло. В такую прохладу это особенно важно.'
     elif (-15 <= temp <= -6):
-        return 'Надеюсь, у тебя есть шарф. Он определенно понадобится!'
+        return 'Надеюсь, у тебя есть шарф и тёплые носки. Они определенно понадобится!'
     elif (-30 <= temp <= -16):
-        return 'Не забывай о теплых носках, когда выходишь на улицу! \nИли, может, лучше вообще остаться дома?:)'
+        return 'Не забывай одеваться максимально тепло, когда выходишь на улицу! \nИли, может, лучше вообще остаться дома?:)'

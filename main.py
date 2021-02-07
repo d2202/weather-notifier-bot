@@ -1,6 +1,7 @@
 import telebot
 import datetime
 from time import sleep
+import func.emoji as emoji
 import func.config as config
 import func.mongo_users as mongo
 import func.weather as weather
@@ -38,15 +39,15 @@ def get_help(message):
     help_message = f"""Прежде всего нужно выбрать город, для которого будет\
  находиться прогноз. Для этого отправь мне название своего города, после этого я пришлю тебе\
  прогноз на текущий час.
- {config.RADIO_BUTTON} Если захочешь, могу запомнить город и присылать в выбранное время прогноз на день.
- {config.RADIO_BUTTON} Для этого нажми кнопку {config.CHECK} "Запомнить *твой город*" после введения города,\
+ {emoji.RADIO_BUTTON} Если захочешь, могу запомнить город и присылать в выбранное время прогноз на день.
+ {emoji.RADIO_BUTTON} Для этого нажми кнопку {emoji.CHECK} "Запомнить *твой город*" после введения города,\
  а затем выбери время, в которое тебе удобно будет получать прогноз.
 
  Список комманд, которые должны тебе помочь (учти, я должен знать город!):\n
- {config.TIME} /time - позволяет изменить время получения утреннего прогноза
- {config.SUN_CLOUD} /now - выведет пронгоз на текущий час
- {config.HELP} /help - выведет еще раз эту подсказку
- {config.STOP} /stop - отписаться от рассылки прогноза (для повторной рассылки нужно будет\
+ {emoji.TIME} /time - позволяет изменить время получения утреннего прогноза
+ {emoji.SUN_CLOUD} /now - выведет пронгоз на текущий час
+ {emoji.HELP} /help - выведет еще раз эту подсказку
+ {emoji.STOP} /stop - отписаться от рассылки прогноза (для повторной рассылки нужно будет\
  заново указать свой город.)
     """
     bot.send_message(message.from_user.id, help_message)
@@ -196,10 +197,10 @@ def send_forecast():
         sending_time = datetime.time(int(hours), int(minutes))
         if current_time == sending_time:
             answer = f"""Сегодня днём в городе {user_city} ожидается:
-\n{user_weather_desc}
-{config.BLUE_MARK}Ветер: {user_wind} м/с
-{config.BLUE_MARK}Температура: {user_temp_actual}
-{config.BLUE_MARK}Ощущается как: {user_temp_feels}\n\n
+\n{emoji.BLUE_MARK} {user_weather_desc}
+{emoji.WIND}Ветер: {user_wind} м/с
+{emoji.THERMOMETER}Температура: {user_temp_actual}
+{emoji.THERMOMETER}Ощущается как: {user_temp_feels}\n\n
 {weather.make_reaction(int(user_temp_actual))}"""
             bot.send_message(user_id, answer)
             logging.info(f'Sended message with dayly forecast to user {user_id}')
