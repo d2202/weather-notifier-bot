@@ -16,7 +16,7 @@ def request_weather_now(city):
         'lang': 'ru',
         'units': 'metric',
         'q': city,
-        'appid': '755b75d5118c5741fb355e027ec288b4'
+        'appid': config.weather_token
     }
     r = requests.get(openweather_url, params=params)
     logging.info(f'Request for {city} is: {r}')
@@ -35,7 +35,7 @@ def request_weather_dayly(city):
         'units': 'metric',
         'q': city,
         'cnt': 3, # вернет в поле list список из трёх временных промежутков: 9, 12, 15 часов
-        'appid': '755b75d5118c5741fb355e027ec288b4'
+        'appid': config.weather_token
     }
     r = requests.get(openweather_url, params=params)
     data_json = r.json()
