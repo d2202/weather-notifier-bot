@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "weather-bot"
+version = "0.1.0"
+description = "Simple weather bot with MongoDB and OpenweatherAPI"
+authors = ["Denis Besfamilnyy <besfamilnyy.wrk@gmail.com>"]
+license = "GNU (GPL)"
+readme = "README.md"
+packages = [{include = "weather_bot"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+certifi = "^2022.9.24"
+chardet = "4.0.0"
+idna = "2.10"
+pytelegrambotapi = "3.7.4"
+schedule = "0.6.0"
+pymongo = {version = "3.11.2", extras = ["srv"]}
+pytz = "^2022.6"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.10.0"
+isort = "^5.10.1"
+flake8 = "^6.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+target-version = ['py39']
+line-length = 120
+exclude = "venv"
