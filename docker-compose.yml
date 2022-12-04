@@ -1,0 +1,8 @@
+version: '3.7'
+
+services:
+  bot:
+    container_name: weather-bot
+    build: .
+    env_file:
+      - .env
