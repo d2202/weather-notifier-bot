@@ -1,5 +1,5 @@
 .idea/
 bot/
 __pycache__/
-func/__pycache__
 urls.txt
+.venv
